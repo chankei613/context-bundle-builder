@@ -12,14 +12,14 @@ import (
 
 var errBundleNotFound = &apiError{"bundle not found"}
 
-type createBundleInput struct {
+type CreateBundleInput struct {
 	Name        string          `json:"name"`
 	Description string          `json:"description"`
 	Refs        []db.ContextRef `json:"refs"`
 }
 
 // CreateBundle は新しいBundleを作成する（HTTP・ネイティブバインディング共用）。
-func (s *Server) CreateBundle(in createBundleInput) (db.Bundle, error) {
+func (s *Server) CreateBundle(in CreateBundleInput) (db.Bundle, error) {
 	if in.Name == "" {
 		return db.Bundle{}, errNameRequired
 	}
@@ -55,13 +55,13 @@ func (s *Server) GetBundle(id string) (db.Bundle, error) {
 	return b, nil
 }
 
-type updateBundleInput struct {
+type UpdateBundleInput struct {
 	Name        *string          `json:"name"`
 	Description *string          `json:"description"`
 	Refs        *[]db.ContextRef `json:"refs"`
 }
 
-func (s *Server) UpdateBundle(id string, in updateBundleInput) (db.Bundle, error) {
+func (s *Server) UpdateBundle(id string, in UpdateBundleInput) (db.Bundle, error) {
 	b, err := s.GetBundle(id)
 	if err != nil {
 		return db.Bundle{}, err
@@ -117,7 +117,7 @@ func (s *Server) DuplicateBundle(id string) (db.Bundle, error) {
 // ─── HTTPハンドラー ────────────────────────────────────────────────────
 
 func (s *Server) httpCreateBundle(w http.ResponseWriter, r *http.Request) {
-	var body createBundleInput
+	var body CreateBundleInput
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, "invalid body", http.StatusBadRequest)
 		return
@@ -149,7 +149,7 @@ func (s *Server) httpGetBundle(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) httpUpdateBundle(w http.ResponseWriter, r *http.Request) {
-	var body updateBundleInput
+	var body UpdateBundleInput
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, "invalid body", http.StatusBadRequest)
 		return

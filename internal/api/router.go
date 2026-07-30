@@ -19,7 +19,10 @@ type Server struct {
 }
 
 func New(conn *gorm.DB) *Server {
-	return &Server{DB: conn}
+	s := &Server{DB: conn}
+	// 永続化済みの設定を起動時にロードする（失敗しても致命的ではないので無視する）
+	_, _ = s.GetSettings()
+	return s
 }
 
 func (s *Server) Router() http.Handler {
@@ -30,6 +33,12 @@ func (s *Server) Router() http.Handler {
 		r.Post("/", s.httpIssueKey)
 		r.Get("/", s.httpListKeys)
 		r.Delete("/{id}", s.httpRevokeKey)
+	})
+
+	r.Route("/api/v1/settings", func(r chi.Router) {
+		r.Use(APIKeyAuth(s.DB))
+		r.Get("/", s.httpGetSettings)
+		r.Patch("/", s.httpUpdateSettings)
 	})
 
 	r.Route("/api/v1/bundles", func(r chi.Router) {

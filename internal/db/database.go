@@ -14,7 +14,7 @@ func Init(path string) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	if err := conn.AutoMigrate(&Bundle{}, &AgentKey{}, &ResolveCacheEntry{}); err != nil {
+	if err := conn.AutoMigrate(&Bundle{}, &AgentKey{}, &ResolveCacheEntry{}, &AppSettings{}); err != nil {
 		return nil, err
 	}
 

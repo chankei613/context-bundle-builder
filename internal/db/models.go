@@ -39,6 +39,15 @@ type AgentKey struct {
 	RevokedAt  *time.Time `json:"revoked_at"`
 }
 
+// AppSettings は単一行（ID固定）で永続化するアプリ全体設定。
+type AppSettings struct {
+	ID                string `gorm:"primaryKey" json:"-"`
+	ObsidianVaultRoot string `json:"obsidian_vault_root"`
+	TaskOutputBaseURL string `json:"task_output_base_url"`
+}
+
+const AppSettingsID = "settings"
+
 // ResolveCacheEntry は同一refの再取得を避けるためのTTL付きキャッシュ。
 type ResolveCacheEntry struct {
 	ID         string    `gorm:"primaryKey" json:"-"`

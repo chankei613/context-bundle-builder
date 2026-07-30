@@ -1,7 +1,7 @@
 .PHONY: run ui build test lint tidy smoke clean
 
 run:
-	go run .
+	go run ./cmd/cbbserve
 
 ui:
 	cd frontend && npm run dev
