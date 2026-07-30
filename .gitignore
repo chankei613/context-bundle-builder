@@ -1,0 +1,9 @@
+*.db
+*.db-shm
+*.db-wal
+.DS_Store
+/context-bundle-builder
+/context-bundle-builder.exe
+build/bin/
+frontend/dist/
+frontend/node_modules/
