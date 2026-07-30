@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Context Bundle Builder — AIに渡す情報を組み立ててプレビューする</title>
+    <meta
+      name="description"
+      content="ファイル・URL・Obsidianノート・前タスクの実行結果など複数ソースから、AIへ渡す「Bundle」を組み立てるデスクトップアプリ。実行前に「AIが実際に何を受け取るか」をプレビューできる。macOS向け・無料・署名/公証済み。"
+    />
+    <meta property="og:title" content="Context Bundle Builder — AIに渡す情報を組み立ててプレビューする" />
+    <meta
+      property="og:description"
+      content="ファイル・URL・ノート・タスク出力からBundleを組み立て、AIが受け取る内容を実行前にプレビュー。macOS向け・無料。"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://context-bundle-builder.vercel.app/og-image.png" />
+    <meta property="og:url" content="https://context-bundle-builder.vercel.app/" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://context-bundle-builder.vercel.app/og-image.png" />
+    <link rel="icon" href="./icon.png" />
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MY1QL5CEZ2"></script>
+    <script>
+      window.dataLayer = window.dataLayer || []
+      function gtag() {
+        dataLayer.push(arguments)
+      }
+      gtag('js', new Date())
+      gtag('config', 'G-MY1QL5CEZ2')
+    </script>
+
+    <style>
+      :root {
+        --bg: #0d0f14;
+        --panel: #15181f;
+        --panel-2: #1a1e27;
+        --line: #2a3040;
+        --text: #e8ecf3;
+        --muted: #8b97ab;
+        --accent: #eb6834;
+        --accent-ink: #1a0800;
+        --ok: #1baf7a;
+        color-scheme: dark;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif;
+        line-height: 1.8;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .wrap {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+
+      a {
+        color: var(--accent);
+      }
+
+      code {
+        background: var(--panel-2);
+        border-radius: 4px;
+        padding: 1px 6px;
+        font-size: 0.9em;
+      }
+
+      /* ── nav ── */
+      nav {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgba(13, 15, 20, 0.9);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .nav-inner {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 20px;
+        max-width: 980px;
+        margin: 0 auto;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+      }
+
+      .brand img {
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+      }
+
+      .nav-spacer {
+        flex: 1;
+      }
+
+      .lang {
+        background: none;
+        border: 1px solid var(--line);
+        color: var(--muted);
+        border-radius: 999px;
+        padding: 4px 12px;
+        font: inherit;
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      .lang:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .btn {
+        display: inline-block;
+        background: var(--accent);
+        color: var(--accent-ink);
+        border: 1px solid var(--accent);
+        border-radius: 8px;
+        padding: 9px 18px;
+        font-weight: 700;
+        text-decoration: none;
+        font-size: 14px;
+        transition: opacity 0.15s;
+      }
+
+      .btn:hover {
+        opacity: 0.85;
+      }
+
+      .btn.ghost {
+        background: none;
+        color: var(--text);
+        border-color: var(--line);
+        font-weight: 500;
+      }
+
+      .btn.ghost:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+        opacity: 1;
+      }
+
+      .btn.small {
+        padding: 6px 14px;
+        font-size: 13px;
+      }
+
+      /* ── hero ── */
+      header.hero {
+        padding: 72px 0 40px;
+        text-align: center;
+      }
+
+      .badge {
+        display: inline-block;
+        border: 1px solid var(--line);
+        color: var(--muted);
+        border-radius: 999px;
+        padding: 3px 14px;
+        font-size: 13px;
+        margin-bottom: 22px;
+      }
+
+      h1 {
+        font-size: clamp(30px, 5.5vw, 46px);
+        line-height: 1.35;
+        margin: 0 0 18px;
+        letter-spacing: -0.01em;
+      }
+
+      h1 .hl {
+        color: var(--accent);
+      }
+
+      .sub {
+        color: var(--muted);
+        font-size: 17px;
+        max-width: 640px;
+        margin: 0 auto 30px;
+      }
+
+      .cta-row {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .cta-note {
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 14px;
+      }
+
+      /* ── screenshot / mockup ── */
+      .shot {
+        margin: 46px 0 0;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+        background: var(--panel);
+        text-align: left;
+      }
+
+      .shot-cap {
+        color: var(--muted);
+        font-size: 13px;
+        text-align: center;
+        padding: 10px 16px;
+        border-top: 1px solid var(--line);
+      }
+
+      /* ── bundle editor mockup ── */
+      .mock-editor {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .mock-col {
+        padding: 18px 20px;
+        font-size: 12.5px;
+      }
+
+      .mock-col + .mock-col {
+        border-left: 1px solid var(--line);
+      }
+
+      .mock-refs {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 10px;
+      }
+
+      .mock-ref {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 8px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+      }
+
+      .mock-ref .kind {
+        flex-shrink: 0;
+        font-size: 10px;
+        padding: 1px 6px;
+        border-radius: 999px;
+        background: var(--panel-2);
+        color: var(--muted);
+      }
+
+      .mock-ref .path {
+        color: #b8c0cf;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .mock-preview-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+      }
+
+      .mock-stats {
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .mock-pre {
+        font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+        font-size: 11px;
+        line-height: 1.7;
+        color: #b8c0cf;
+        background: var(--panel-2);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px;
+        white-space: pre-wrap;
+      }
+
+      .mock-pre .h {
+        color: var(--accent);
+      }
+
+      /* ── 用途例バー ── */
+      .uses {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        margin: 46px 0;
+      }
+
+      .use {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 6px 16px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      /* ── sections ── */
+      section {
+        padding: 56px 0;
+        border-top: 1px solid var(--line);
+      }
+
+      h2 {
+        font-size: 25px;
+        margin: 0 0 10px;
+        text-align: center;
+      }
+
+      .lead {
+        color: var(--muted);
+        text-align: center;
+        margin: 0 auto 36px;
+        max-width: 640px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(268px, 1fr));
+        gap: 14px;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 20px;
+      }
+
+      .card h3 {
+        margin: 0 0 8px;
+        font-size: 16px;
+      }
+
+      .card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .card .ico {
+        font-size: 20px;
+        display: block;
+        margin-bottom: 10px;
+      }
+
+      /* ── steps ── */
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 14px;
+      }
+
+      .step {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 20px;
+      }
+
+      .step-no {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: var(--accent-ink);
+        font-weight: 700;
+        font-size: 14px;
+        margin-bottom: 12px;
+      }
+
+      .step h3 {
+        margin: 0 0 6px;
+        font-size: 16px;
+      }
+
+      .step p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .flow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 32px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .flow span.node {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 16px;
+        background: var(--panel);
+      }
+
+      .flow span.node.last {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      /* ── safety ── */
+      .safety {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-left: 3px solid var(--ok);
+        border-radius: 10px;
+        padding: 22px;
+      }
+
+      .safety ul {
+        margin: 12px 0 0;
+        padding-left: 20px;
+        color: var(--muted);
+      }
+
+      .safety li {
+        margin-bottom: 8px;
+      }
+
+      /* ── download ── */
+      .download {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 44px 24px;
+        text-align: center;
+      }
+
+      .req {
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 18px;
+      }
+
+      .note-box {
+        background: var(--bg);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 14px 18px;
+        margin: 26px auto 0;
+        max-width: 620px;
+        text-align: left;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .note-box strong {
+        color: var(--accent);
+      }
+
+      footer {
+        border-top: 1px solid var(--line);
+        padding: 28px 0 46px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      footer a {
+        margin: 0 8px;
+      }
+
+      @media (max-width: 640px) {
+        header.hero {
+          padding: 48px 0 30px;
+        }
+        section {
+          padding: 42px 0;
+        }
+        .mock-editor {
+          grid-template-columns: 1fr;
+        }
+        .mock-col + .mock-col {
+          border-left: none;
+          border-top: 1px solid var(--line);
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <nav>
+      <div class="nav-inner">
+        <span class="brand">
+          <img src="./icon.png" alt="" />
+          Context Bundle Builder
+        </span>
+        <span class="nav-spacer"></span>
+        <button class="lang" id="lang-toggle" type="button">EN</button>
+        <a class="btn small" href="#download" data-i18n="nav.dl">ダウンロード</a>
+      </div>
+    </nav>
+
+    <header class="hero">
+      <div class="wrap">
+        <span class="badge" data-i18n="hero.badge">macOS · 無料 · 署名/公証済み</span>
+        <h1>
+          <span data-i18n="hero.h1a">AIに渡す情報を、</span
+          ><span class="hl" data-i18n="hero.h1b">見えるようにする</span
+          ><span data-i18n="hero.h1c">。</span>
+        </h1>
+        <p class="sub" data-i18n="hero.sub">
+          ファイル・URL・Obsidianノート・前タスクの実行結果を集めて「Bundle」にまとめ、
+          <code>AIが実際に受け取るテキスト</code> を実行前にプレビューします。
+        </p>
+        <div class="cta-row">
+          <a class="btn" href="#download" data-i18n="hero.cta1">無料でダウンロード</a>
+          <a class="btn ghost" href="#how" data-i18n="hero.cta2">使い方を見る</a>
+        </div>
+        <p class="cta-note" data-i18n="hero.note">
+          インストール不要・アカウント登録なし。ファイルとノートは読み取るだけで書き換えません。
+        </p>
+
+        <div class="shot">
+          <div class="mock-editor" aria-hidden="true">
+            <div class="mock-col">
+              <strong style="font-size: 12px">PRレビュー用</strong>
+              <div class="mock-refs">
+                <div class="mock-ref"><span class="kind">file</span><span class="path">/src/api/routes.md</span></div>
+                <div class="mock-ref"><span class="kind">url</span><span class="path">https://docs.example.com/style-guide</span></div>
+                <div class="mock-ref"><span class="kind">obsidian_note</span><span class="path">projects/api/decisions.md</span></div>
+                <div class="mock-ref"><span class="kind">task_output</span><span class="path">task#4821.diff_summary</span></div>
+              </div>
+            </div>
+            <div class="mock-col">
+              <div class="mock-preview-head">
+                <span style="font-size: 12px; font-weight: 600" data-i18n="shot.previewTitle">プレビュー</span>
+                <span class="mock-stats">2,140 chars · ~535 tokens</span>
+              </div>
+              <div class="mock-pre"><span class="h"># [file] /src/api/routes.md</span>
+POST /api/v1/entries — append-only...
+
+<span class="h"># [url] docs.example.com/style-guide</span>
+All handlers must return...
+
+<span class="h"># [obsidian_note] projects/api/decisions.md</span>
+2026-07-20: chose chi router because...</div>
+            </div>
+          </div>
+          <p class="shot-cap" data-i18n="shot.cap">
+            Bundle編集画面 — 左でソースを集め、右で実際に送られるテキストを確認する
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <div class="wrap">
+      <div class="uses">
+        <span class="use" data-i18n="use.1">毎回同じファイルを貼り付けている</span>
+        <span class="use" data-i18n="use.2">「何をAIに渡したか思い出せない」</span>
+        <span class="use" data-i18n="use.3">良い指示の構成を使い回したい</span>
+        <span class="use" data-i18n="use.4">チームでコンテキストを共有したい</span>
+      </div>
+    </div>
+
+    <section id="features">
+      <div class="wrap">
+        <h2 data-i18n="feat.h">できること</h2>
+        <p class="lead" data-i18n="feat.lead">
+          集めて、確認して、渡す。3つだけに集中したツールです。
+        </p>
+
+        <div class="grid">
+          <div class="card">
+            <span class="ico">🗂</span>
+            <h3 data-i18n="feat.1h">4種類のソースを1つに</h3>
+            <p data-i18n="feat.1p">
+              ファイル・URL・Obsidianノート・前タスクの実行結果を、順番を保ったまま1つのBundleに集約します。
+            </p>
+          </div>
+          <div class="card">
+            <span class="ico">👁</span>
+            <h3 data-i18n="feat.2h">送信前プレビュー</h3>
+            <p data-i18n="feat.2p">
+              「AIが実際に受け取るテキスト」をそのまま表示。文字数・概算トークン数もその場で分かります。
+            </p>
+          </div>
+          <div class="card">
+            <span class="ico">🧩</span>
+            <h3 data-i18n="feat.3h">1件失敗しても止まらない</h3>
+            <p data-i18n="feat.3p">
+              ファイルが消えていた・URLが404だった、といった失敗はその箇所だけ警告として表示し、他のソースは解決を続けます。
+            </p>
+          </div>
+          <div class="card">
+            <span class="ico">📋</span>
+            <h3 data-i18n="feat.4h">複製してテンプレート化</h3>
+            <p data-i18n="feat.4p">
+              うまくいった構成のBundleを複製して、別のタスクにも使い回せます。
+            </p>
+          </div>
+          <div class="card">
+            <span class="ico">📤</span>
+            <h3 data-i18n="feat.5h">コピー / .md書き出し</h3>
+            <p data-i18n="feat.5p">
+              解決したテキストをワンクリックでクリップボードにコピー、または.mdファイルとして書き出せます。
+            </p>
+          </div>
+          <div class="card">
+            <span class="ico">🔌</span>
+            <h3 data-i18n="feat.6h">外部ツールからも利用可</h3>
+            <p data-i18n="feat.6p">
+              APIキーを発行すれば、AI SchedulerなどからHTTP経由で解決済みBundleを取得できます。
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="how">
+      <div class="wrap">
+        <h2 data-i18n="how.h">使い方は3ステップ</h2>
+        <p class="lead" data-i18n="how.lead">アプリを起動してBundleを作るだけ。設定は不要です。</p>
+
+        <div class="steps">
+          <div class="step">
+            <span class="step-no">1</span>
+            <h3 data-i18n="how.1h">Bundleを作成</h3>
+            <p data-i18n="how.1p">
+              名前を付けて作成し、ファイル・URL・Obsidianノート・タスク出力を好きな順番で追加します。
+            </p>
+          </div>
+          <div class="step">
+            <span class="step-no">2</span>
+            <h3 data-i18n="how.2h">解決してプレビュー</h3>
+            <p data-i18n="how.2p">
+              「解決する」を押すと、全ソースを取得して1つのテキストにまとめたプレビューが表示されます。
+            </p>
+          </div>
+          <div class="step">
+            <span class="step-no">3</span>
+            <h3 data-i18n="how.3h">コピーしてAIに渡す</h3>
+            <p data-i18n="how.3p">
+              クリップボードにコピーしてそのままAIに貼り付け。うまくいった構成は複製して使い回せます。
+            </p>
+          </div>
+        </div>
+
+        <div class="flow">
+          <span class="node" data-i18n="flow.1">ソースを追加</span>
+          <span>→</span>
+          <span class="node" data-i18n="flow.2">解決</span>
+          <span>→</span>
+          <span class="node" data-i18n="flow.3">プレビュー確認</span>
+          <span>→</span>
+          <span class="node last" data-i18n="flow.4">コピーしてAIへ</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="safety">
+      <div class="wrap">
+        <h2 data-i18n="safe.h">読み取り専用という前提</h2>
+        <p class="lead" data-i18n="safe.lead">
+          Bundleを組み立てるためのツールであり、参照先を書き換えることはありません。
+        </p>
+
+        <div class="safety">
+          <strong data-i18n="safe.title">Context Bundle Builderが守ること</strong>
+          <ul>
+            <li data-i18n="safe.1">
+              <strong>参照先には書き込まない</strong> — ファイル・Obsidianノート・URLはすべて読み取り専用で扱います。
+            </li>
+            <li data-i18n="safe.2">
+              <strong>Obsidianノートはvault外に出られない</strong> — 設定したvaultルートの外側を指すパスは拒否します。
+            </li>
+            <li data-i18n="safe.3">
+              <strong>URL取得は上限付き</strong> — タイムアウトとサイズ上限を設け、無制限フェッチはしません。
+            </li>
+            <li data-i18n="safe.4">
+              <strong>外部アクセスにはAPIキーが必須</strong> — キーはハッシュ化して保存し、平文では残しません。
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="download">
+      <div class="wrap">
+        <div class="download">
+          <h2 data-i18n="dl.h">ダウンロード</h2>
+          <p class="lead" data-i18n="dl.lead">
+            無料で使えます。気に入ったらコーヒーをおごってください。
+          </p>
+          <div class="cta-row">
+            <a class="btn" href="./context-bundle-builder-macos-universal.zip" download data-i18n="dl.btn"
+              >macOS版をダウンロード（Apple Silicon / Intel）</a
+            >
+            <a class="btn ghost" href="https://buymeacoffee.com/cometlabo" target="_blank" rel="noopener" data-i18n="dl.coffee"
+              >☕ 開発を応援する</a
+            >
+          </div>
+          <p class="req" data-i18n="dl.req">macOS 11 以降 · Universal (Apple Silicon / Intel) · 署名/公証済み · 約11MB</p>
+
+          <div class="note-box">
+            <p style="margin: 0">
+              <strong data-i18n="dl.n1t">Windows版について：</strong>
+              <span data-i18n="dl.n1">
+                準備中です。ソースからのビルドは
+                <a href="https://github.com/chankei613/context-bundle-builder" target="_blank" rel="noopener">GitHubリポジトリ</a>
+                を参照してください。
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="wrap">
+        <p data-i18n="foot.made">Made by comet — AIと働くための道具をつくっています</p>
+        <p>
+          <a href="https://buymeacoffee.com/cometlabo" target="_blank" rel="noopener">Buy me a coffee</a>
+          <a href="https://choco-chip.comet-cat.com/" target="_blank" rel="noopener">Portfolio</a>
+        </p>
+      </div>
+    </footer>
+
+    <script>
+      const dict = {
+        en: {
+          'nav.dl': 'Download',
+          'hero.badge': 'macOS · Free · Signed & notarized',
+          'hero.h1a': 'Make what you hand your AI ',
+          'hero.h1b': 'visible',
+          'hero.h1c': '.',
+          'hero.sub':
+            'Gather files, URLs, Obsidian notes, and prior task outputs into a "Bundle", and preview the exact text your AI will receive before you send it.',
+          'hero.cta1': 'Download for free',
+          'hero.cta2': 'See how it works',
+          'hero.note': 'No installer, no account. Files and notes are read-only — nothing gets rewritten.',
+          'shot.previewTitle': 'Preview',
+          'shot.cap': 'Bundle editor — gather sources on the left, see exactly what gets sent on the right',
+          'use.1': 'Pasting the same files every time',
+          'use.2': '"I can\'t remember what I gave the AI"',
+          'use.3': 'Want to reuse a good context setup',
+          'use.4': 'Want to share context across a team',
+          'feat.h': 'What it does',
+          'feat.lead': 'Gather, check, hand off. A tool that focuses on exactly those three things.',
+          'feat.1h': 'Four source types, one bundle',
+          'feat.1p':
+            'Files, URLs, Obsidian notes, and prior task outputs — combined into one bundle, order preserved.',
+          'feat.2h': 'Preview before you send',
+          'feat.2p':
+            'See the exact text your AI will receive, plus a character count and rough token estimate.',
+          'feat.3h': 'One failure doesn\'t stop the rest',
+          'feat.3p':
+            'A missing file or a 404\'d URL shows up as a warning on that one item — every other source still resolves.',
+          'feat.4h': 'Duplicate to build templates',
+          'feat.4p': 'Found a bundle that works well? Duplicate it and reuse the setup for the next task.',
+          'feat.5h': 'Copy / export as .md',
+          'feat.5p': 'One click to copy the resolved text to your clipboard, or export it as a .md file.',
+          'feat.6h': 'Usable from external tools too',
+          'feat.6p': 'Issue an API key and tools like AI Scheduler can fetch a resolved bundle over HTTP.',
+          'how.h': 'Three steps',
+          'how.lead': 'Launch the app and build a bundle. Nothing to configure.',
+          'how.1h': 'Create a bundle',
+          'how.1p': 'Name it, then add files, URLs, Obsidian notes, and task outputs in any order.',
+          'how.2h': 'Resolve and preview',
+          'how.2p': 'Press "Resolve" to fetch every source and see the combined text.',
+          'how.3h': 'Copy it into your AI',
+          'how.3p': 'Copy to clipboard and paste it in. Duplicate the bundle when a setup works well.',
+          'flow.1': 'Add sources',
+          'flow.2': 'Resolve',
+          'flow.3': 'Review preview',
+          'flow.4': 'Copy to AI',
+          'safe.h': 'Read-only by design',
+          'safe.lead': 'This tool assembles bundles — it never writes back to what it reads.',
+          'safe.title': 'What Context Bundle Builder guarantees',
+          'safe.1': 'Never writes to sources — files, Obsidian notes, and URLs are all read-only.',
+          'safe.2': 'Obsidian notes can\'t escape the vault — paths outside the configured vault root are rejected.',
+          'safe.3': 'URL fetches are capped — a timeout and a size limit apply; there is no unbounded fetching.',
+          'safe.4': 'External access requires an API key — keys are stored hashed, never in plaintext.',
+          'dl.h': 'Download',
+          'dl.lead': 'Free to use. Buy me a coffee if it helps.',
+          'dl.btn': 'Download for macOS (Apple Silicon / Intel)',
+          'dl.coffee': '☕ Support development',
+          'dl.req': 'macOS 11+ · Universal (Apple Silicon / Intel) · Signed & notarized · ~11MB',
+          'dl.n1t': 'About the Windows build:',
+          'dl.n1':
+            'Coming soon. In the meantime, see the <a href="https://github.com/chankei613/context-bundle-builder" target="_blank" rel="noopener">GitHub repository</a> to build from source.',
+          'foot.made': 'Made by comet — building tools for working with AI',
+        },
+      }
+
+      const original = {}
+      document.querySelectorAll('[data-i18n]').forEach((el) => {
+        original[el.dataset.i18n] = el.innerHTML
+      })
+
+      function apply(lang) {
+        document.documentElement.lang = lang === 'en' ? 'en' : 'ja'
+        document.querySelectorAll('[data-i18n]').forEach((el) => {
+          const key = el.dataset.i18n
+          const text = lang === 'en' ? dict.en[key] : original[key]
+          if (text !== undefined) el.innerHTML = text
+        })
+        document.getElementById('lang-toggle').textContent = lang === 'en' ? '日本語' : 'EN'
+        localStorage.setItem('lp_lang', lang)
+      }
+
+      document.getElementById('lang-toggle').addEventListener('click', () => {
+        apply(localStorage.getItem('lp_lang') === 'en' ? 'ja' : 'en')
+      })
+
+      apply(localStorage.getItem('lp_lang') || 'ja')
+    </script>
+  </body>
+</html>
