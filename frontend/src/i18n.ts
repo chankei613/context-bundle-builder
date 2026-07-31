@@ -11,6 +11,7 @@ const messages: Record<Locale, Record<string, string>> = {
     'app.subtitle': 'Context Bundle Builder',
     'lang.toggle': 'JA',
     'nav.bundles': 'Bundles',
+    'nav.help': 'Help',
     'nav.settings': 'Settings',
 
     'error.prefix': 'Error: ',
@@ -76,11 +77,34 @@ const messages: Record<Locale, Record<string, string>> = {
     'settings.version': 'Version',
     'settings.quit': 'Quit',
     'settings.quit.confirm': 'Quit the app? External access via the API will stop until you reopen it.',
+
+    'help.title': 'Help',
+    'help.intro': 'A quick guide to building your first bundle and getting past the parts people usually get stuck on.',
+
+    'help.start.title': 'First steps',
+    'help.start.1': 'Go to Bundles and create a new one — just give it a name.',
+    'help.start.2': 'Open it, pick a source type, and add a path/URL/note/ref. Repeat for as many sources as you want.',
+    'help.start.3': 'Press "Resolve" on the right to fetch everything and see the combined preview.',
+    'help.start.4': 'Copy the preview text and paste it into your AI conversation, or export it as a .md file.',
+
+    'help.sources.title': 'The four source types',
+    'help.sources.file': 'File — an absolute local path. The file is read as-is; large files are truncated at ~2MB.',
+    'help.sources.url': 'URL — fetched over HTTP with a timeout and size limit. HTML pages are stripped down to text automatically.',
+    'help.sources.obsidian': 'Obsidian note — a path relative to the vault root you set in Settings. Set the vault root first, or this source type will fail.',
+    'help.sources.taskOutput': 'Task output — in the form task#id.output_key, resolved by an external adapter URL you configure in Settings. Leave Settings empty and this source type will show a clear "not configured" warning instead of crashing the whole bundle.',
+
+    'help.stuck.title': 'Common snags',
+    'help.stuck.1': 'Obsidian note fails to resolve → Settings → set "Obsidian vault root" to the absolute path of your vault first.',
+    'help.stuck.2': 'Task output always shows an error → this needs a small adapter endpoint; until you have one, just skip this source type.',
+    'help.stuck.3': 'One source fails but the others are fine → that is expected. A failed source shows up as a warning under the preview; the rest still resolves.',
+    'help.stuck.4': 'Nothing shows in the preview → you have to press "Resolve" explicitly; it does not run automatically as you type, since URL sources make real network requests.',
+    'help.stuck.5': 'An external tool needs the data → issue an API key in Settings and use the API endpoint shown there.',
   },
   ja: {
     'app.subtitle': 'Context Bundle Builder',
     'lang.toggle': 'EN',
     'nav.bundles': 'Bundle',
+    'nav.help': 'ヘルプ',
     'nav.settings': '設定',
 
     'error.prefix': 'エラー: ',
@@ -146,6 +170,28 @@ const messages: Record<Locale, Record<string, string>> = {
     'settings.version': 'バージョン',
     'settings.quit': '終了',
     'settings.quit.confirm': 'アプリを終了しますか？再度開くまでAPI経由の外部アクセスは停止します。',
+
+    'help.title': 'ヘルプ',
+    'help.intro': '最初のBundleを作るための最短ルートと、よく詰まるポイントをまとめました。',
+
+    'help.start.title': '最初の一歩',
+    'help.start.1': 'Bundle一覧から新規作成する。名前を付けるだけでOK。',
+    'help.start.2': '作成したBundleを開き、ソース種別を選んでパス/URL/ノート/参照を追加する。好きなだけ繰り返す。',
+    'help.start.3': '右側の「解決する」を押すと、全ソースを取得して連結したプレビューが表示される。',
+    'help.start.4': 'プレビューのテキストをコピーしてAIとの会話に貼り付ける、または.mdとして書き出す。',
+
+    'help.sources.title': '4種類のソース',
+    'help.sources.file': 'ファイル — ローカルの絶対パス。そのまま読み込む。約2MBを超える大きなファイルは途中で切り詰められる。',
+    'help.sources.url': 'URL — タイムアウトとサイズ上限付きでHTTP取得する。HTMLページは自動でテキストだけに整形される。',
+    'help.sources.obsidian': 'Obsidianノート — Settingsで設定したvaultルートからの相対パス。先にvaultルートを設定しないとこのソース種別は失敗する。',
+    'help.sources.taskOutput': 'タスク出力 — task#id.output_key の形式で、Settingsで設定した外部アダプターURLで解決される。Settingsを空のままにしておくと、Bundle全体を壊すことなく「未設定」という警告がはっきり表示される。',
+
+    'help.stuck.title': 'よくある詰まりどころ',
+    'help.stuck.1': 'Obsidianノートが解決に失敗する → 先にSettingsで「Obsidian vaultルート」にvaultの絶対パスを設定する。',
+    'help.stuck.2': 'タスク出力が常にエラーになる → 小さなアダプターエンドポイントが必要。用意していない間はこのソース種別を使わなければよい。',
+    'help.stuck.3': '1つだけ失敗して他は成功する → 想定通りの挙動。失敗したソースはプレビュー下に警告として表示され、他は解決を続ける。',
+    'help.stuck.4': 'プレビューに何も出ない → 「解決する」を明示的に押す必要がある。URLソースは実際にネットワークへリクエストするため、入力の度に自動実行はしない。',
+    'help.stuck.5': '外部ツールからデータを使いたい → SettingsでAPIキーを発行し、そこに表示されるAPIエンドポイントを使う。',
   },
 }
 
