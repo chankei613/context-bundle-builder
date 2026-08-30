@@ -7,13 +7,18 @@
 
 詳細は [docs/spec.md](docs/spec.md) を参照。
 
-## 現在のステータス: Phase 3（Wails + Vue3 UI）完了
+## 現在のステータス: v0.1.1 リリース済み
 
 - [x] Phase 0: プロジェクト立ち上げ
 - [x] Phase 1: データモデル・Bundle CRUD API（APIキー認証・ブートストラップ認証）
 - [x] Phase 2: ソースコネクタ（file/url/obsidian_note/task_output）・解決エンジン・プレビューAPI
 - [x] Phase 3: Wails + Vue3 UI（Bundle一覧・編集・プレビューパネル・設定）
-- [ ] Phase 4: 仕上げ・署名・配布・LP
+- [x] Phase 4: 仕上げ・署名・配布・LP（v0.1.1 でアプリ内Help画面を追加）
+
+macOSアプリ（署名・公証済み、Apple Silicon / Intel 共通のUniversalバイナリ）は
+[GitHub Releases](https://github.com/chankei613/context-bundle-builder/releases) から、
+ランディングページは https://context-bundle-builder.vercel.app/ から入手できる。
+アプリ内のHelpタブに使い方の説明がある。
 
 ## 使い方（デスクトップアプリ）
 
